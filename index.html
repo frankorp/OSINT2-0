@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕵️‍♂️ OSINT Tool - СНГ Инвестigator</title>
+    <style>
+        :root {
+            --primary: #00ff00;
+            --secondary: #00cc00;
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(0, 20, 0, 0.9);
+            --text: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a1929, #1a3a5f, #0a1929);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Шапка */
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(90deg, #001122, #003344, #001122);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+        
+        .logo {
+            font-size: 3em;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #00ff00, #00cc88, #00ff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .subtitle {
+            color: #00cc88;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        
+        /* Меню */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .menu-card {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.4);
+            background: rgba(0, 40, 0, 0.95);
+        }
+        
+        .menu-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+        }
+        
+        .menu-title {
+            font-size: 1.6em;
+            margin-bottom: 15px;
+            color: #00ff88;
+        }
+        
+        .menu-desc {
+            color: #00cc88;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+        
+        /* Секции анализа */
+        .analysis-section {
+            background: linear-gradient(145deg, #001122, #002233);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            color: #00ff88;
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        /* Формы */
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #00cc88;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 30, 0, 0.8);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #008800, #00cc00);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            margin: 10px 5px;
+            min-width: 150px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(90deg, #00cc00, #00ff00);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(90deg, #333333, #555555);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(90deg, #555555, #777777);
+        }
+        
+        /* Результаты */
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(0, 10, 0, 0.9);
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(0, 40, 0, 0.3);
+            border-left: 4px solid var(--primary);
+            border-radius: 5px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .result-success {
+            color: #00ff00;
+        }
+        
+        .result-warning {
+            color: #ffff00;
+        }
+        
+        .result-error {
+            color: #ff5555;
+        }
+        
+        /* Футер */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #00cc88;
+            border-top: 1px solid var(--primary);
+            font-size: 0.9em;
+        }
+        
+        /* Загрузка */
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(0, 255, 0, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 2em;
+            }
+            
+            .menu-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="logo">🕵️‍♂️ OSINT СНГ Investigator</div>
+            <div class="subtitle">Автономная система сбора открытой информации</div>
+            <div class="subtitle" style="font-size: 1em; color: #00aa88;">Анализ данных по России, Украине, Беларуси, Казахстану</div>
+        </div>
+        
+        <!-- Главное меню -->
+        <div class="menu-grid" id="mainMenu">
+            <div class="menu-card" onclick="showSection('ip')">
+                <div class="menu-icon">🌐</div>
+                <div class="menu-title">IP Анализ</div>
+                <div class="menu-desc">Геолокация, провайдер, проверка VPN/Proxy</div>
+            </div>
+            
+            <div class="menu-card" onclick="showSection('phone')">
+                <div class="menu-icon">📱</div>
+                <div class="menu-title">Телефон СНГ</div>
+                <div class="menu-desc">Поиск по номерам РФ/УКР/БЕЛ/КАЗ</div>
+            </div>
+            
+            <div class="menu-card" onclick="showSection('email')">
+                <div class="menu-icon">📧</div>
+                <div class="menu-title">Email Анализ</div>
+                <div class="menu-desc">Поиск утечек, соцсети, проверка домена</div>
+            </div>
+            
+            <div class="menu-card" onclick="showSection('username')">
+                <div class="menu-icon">👤</div>
+                <div class="menu-title">Поиск по Нику</div>
+                <div class="menu-desc">Поиск профилей в соцсетях СНГ</div>
+            </div>
+            
+            <div class="menu-card" onclick="showSection('domain')">
+                <div class="menu-icon">🔗</div>
+                <div class="menu-title">Анализ Домена</div>
+                <div class="menu-desc">WHOIS, DNS, поддомены, SSL</div>
+            </div>
+            
+            <div class="menu-card" onclick="showSection('social')">
+                <div class="menu-icon">📊</div>
+                <div class="menu-title">Соцсети СНГ</div>
+                <div class="menu-desc">Поиск по ВК, ОК, Телеграм, Яндекс</div>
+            </div>
+        </div>
+        
+        <!-- Секция анализа IP -->
+        <div class="analysis-section" id="ipSection">
+            <div class="section-title">🌐 Анализ IP Адреса</div>
+            <div class="input-group">
+                <label class="input-label">Введите IP адрес:</label>
+                <input type="text" class="input-field" id="ipInput" placeholder="Например: 8.8.8.8 или 192.168.1.1">
+            </div>
+            <button class="btn" onclick="analyzeIP()">🔍 Анализировать</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="loader" id="ipLoader">
+                <div class="spinner"></div>
+                <div>Анализируем IP...</div>
+            </div>
+            <div class="results" id="ipResults"></div>
+        </div>
+        
+        <!-- Секция анализа телефона -->
+        <div class="analysis-section" id="phoneSection">
+            <div class="section-title">📱 Анализ Телефона СНГ</div>
+            <div class="input-group">
+                <label class="input-label">Введите номер телефона:</label>
+                <input type="text" class="input-field" id="phoneInput" placeholder="+79991234567 или 380631234567">
+            </div>
+            <button class="btn" onclick="analyzePhone()">🔍 Проверить номер</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="results" id="phoneResults"></div>
+        </div>
+        
+        <!-- Секция анализа email -->
+        <div class="analysis-section" id="emailSection">
+            <div class="section-title">📧 Анализ Email</div>
+            <div class="input-group">
+                <label class="input-label">Введите email адрес:</label>
+                <input type="email" class="input-field" id="emailInput" placeholder="user@example.com">
+            </div>
+            <button class="btn" onclick="analyzeEmail()">🔍 Анализировать</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="results" id="emailResults"></div>
+        </div>
+        
+        <!-- Секция поиска по нику -->
+        <div class="analysis-section" id="usernameSection">
+            <div class="section-title">👤 Поиск по Никнейму</div>
+            <div class="input-group">
+                <label class="input-label">Введите никнейм:</label>
+                <input type="text" class="input-field" id="usernameInput" placeholder="username или id123456">
+            </div>
+            <button class="btn" onclick="searchUsername()">🔍 Искать профили</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="results" id="usernameResults"></div>
+        </div>
+        
+        <!-- Секция анализа домена -->
+        <div class="analysis-section" id="domainSection">
+            <div class="section-title">🔗 Анализ Домена</div>
+            <div class="input-group">
+                <label class="input-label">Введите домен:</label>
+                <input type="text" class="input-field" id="domainInput" placeholder="example.ru или site.ua">
+            </div>
+            <button class="btn" onclick="analyzeDomain()">🔍 Анализировать</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="results" id="domainResults"></div>
+        </div>
+        
+        <!-- Секция поиска в соцсетях -->
+        <div class="analysis-section" id="socialSection">
+            <div class="section-title">📊 Поиск в Соцсетях СНГ</div>
+            <div class="input-group">
+                <label class="input-label">Введите имя/фамилию/ник:</label>
+                <input type="text" class="input-field" id="socialInput" placeholder="Иван Иванов или nickname">
+            </div>
+            <button class="btn" onclick="searchSocial()">🔍 Искать в соцсетях</button>
+            <button class="btn btn-secondary" onclick="showMainMenu()">← Назад</button>
+            <div class="results" id="socialResults"></div>
+        </div>
+        
+        <!-- Футер -->
+        <div class="footer">
+            <div>OSINT СНГ Investigator v2.0 | Работает полностью в браузере</div>
+            <div>⚠️ Используйте только в законных целях | © 2024</div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ОСНОВНЫЕ ФУНКЦИИ ====================
+        
+        // Показать главное меню
+        function showMainMenu() {
+            document.getElementById('mainMenu').style.display = 'grid';
+            hideAllSections();
+        }
+        
+        // Скрыть все секции
+        function hideAllSections() {
+            const sections = document.querySelectorAll('.analysis-section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+        }
+        
+        // Показать конкретную секцию
+        function showSection(sectionId) {
+            document.getElementById('mainMenu').style.display = 'none';
+            hideAllSections();
+            document.getElementById(sectionId + 'Section').style.display = 'block';
+        }
+        
+        // Показать загрузку
+        function showLoader(loaderId) {
+            document.getElementById(loaderId).style.display = 'block';
+        }
+        
+        // Скрыть загрузку
+        function hideLoader(loaderId) {
+            document.getElementById(loaderId).style.display = 'none';
+        }
+        
+        // Добавить результат
+        function addResult(elementId, message, type = 'success') {
+            const resultDiv = document.getElementById(elementId);
+            const resultItem = document.createElement('div');
+            resultItem.className = `result-item result-${type}`;
+            resultItem.innerHTML = message;
+            resultDiv.appendChild(resultItem);
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+        
+        // Очистить результаты
+        function clearResults(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        // ==================== МОДУЛЬ АНАЛИЗА IP ====================
+        
+        async function analyzeIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) {
+                alert('Введите IP адрес');
+                return;
+            }
+            
+            clearResults('ipResults');
+            showLoader('ipLoader');
+            
+            // Проверка формата IP
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipRegex.test(ip)) {
+                addResult('ipResults', '❌ Неверный формат IP адреса', 'error');
+                hideLoader('ipLoader');
+                return;
+            }
+            
+            try {
+                // Геолокация через ip-api
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await response.json();
+                
+                addResult('ipResults', `🌍 <strong>ГЕОЛОКАЦИЯ:</strong>`, 'success');
+                addResult('ipResults', `   Страна: ${data.country_name || 'N/A'} (${data.country_code || 'N/A'})`);
+                addResult('ipResults', `   Город: ${data.city || 'N/A'}`);
+                addResult('ipResults', `   Регион: ${data.region || 'N/A'}`);
+                addResult('ipResults', `   Почтовый индекс: ${data.postal || 'N/A'}`);
+                addResult('ipResults', `   Координаты: ${data.latitude || 'N/A'}, ${data.longitude || 'N/A'}`);
+                
+                addResult('ipResults', `📡 <strong>СЕТЕВЫЕ ДАННЫЕ:</strong>`, 'success');
+                addResult('ipResults', `   Провайдер: ${data.org || 'N/A'}`);
+                addResult('ipResults', `   ASN: ${data.asn || 'N/A'}`);
+                addResult('ipResults', `   Часовой пояс: ${data.timezone || 'N/A'}`);
+                
+                // Дополнительная проверка через ip-api.com
+                try {
+                    const ipapiResponse = await fetch(`http://ip-api.com/json/${ip}`);
+                    const ipapiData = await ipapiResponse.json();
+                    
+                    if (ipapiData.status === 'success') {
+                        addResult('ipResults', `🔍 <strong>ДОПОЛНИТЕЛЬНО:</strong>`, 'success');
+                        addResult('ipResults', `   Регион: ${ipapiData.regionName || 'N/A'}`);
+                        addResult('ipResults', `   Организация: ${ipapiData.org || 'N/A'}`);
+                        addResult('ipResults', `   Статус: ${ipapiData.isp || 'N/A'}`);
+                    }
+                } catch (e) {}
+                
+                // Ссылки для дальнейшего исследования
+                addResult('ipResults', `🔗 <strong>ССЫЛКИ ДЛЯ ИССЛЕДОВАНИЯ:</strong>`, 'warning');
+                addResult('ipResults', `   • Whois: https://whois.domaintools.com/${ip}`);
+                addResult('ipResults', `   • AbuseIPDB: https://www.abuseipdb.com/check/${ip}`);
+                addResult('ipResults', `   • Shodan: https://www.shodan.io/host/${ip}`);
+                addResult('ipResults', `   • Вирустотал: https://www.virustotal.com/gui/ip-address/${ip}`);
+                
+            } catch (error) {
+                addResult('ipResults', `❌ Ошибка при анализе IP: ${error.message}`, 'error');
+            }
+            
+            hideLoader('ipLoader');
+        }
+        
+        // ==================== МОДУЛЬ АНАЛИЗА ТЕЛЕФОНА ====================
+        
+        function analyzePhone() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) {
+                alert('Введите номер телефона');
+                return;
+            }
+            
+            clearResults('phoneResults');
+            
+            // Очистка номера
+            const cleanPhone = phone.replace(/[^0-9+]/g, '');
+            addResult('phoneResults', `📱 <strong>АНАЛИЗ НОМЕРА:</strong> ${phone}`, 'success');
+            addResult('phoneResults', `   Очищенный номер: ${cleanPhone}`);
+            
+            // Определение страны
+            let country = 'Неизвестно';
+            let operator = 'Неизвестно';
+            
+            if (cleanPhone.startsWith('7') || cleanPhone.startsWith('+7')) {
+                country = 'Россия 🇷🇺';
+                // Определение оператора РФ
+                const prefix = cleanPhone.substr(cleanPhone.length - 10, 3);
+                const operators = {
+                    '900': 'МегаФон',
+                    '901': 'МТС',
+                    '902': 'МТС',
+                    '903': 'МТС',
+                    '904': 'МТС',
+                    '905': 'МТС',
+                    '906': 'МТС',
+                    '908': 'МТС',
+                    '909': 'МТС',
+                    '910': 'МТС',
+                    '911': 'МТС',
+                    '912': 'МТС',
+                    '913': 'МТС',
+                    '914': 'МТС',
+                    '915': 'МТС',
+                    '916': 'МТС',
+                    '917': 'МТС',
+                    '918': 'МТС',
+                    '919': 'МТС',
+                    '920': 'МегаФон',
+                    '921': 'МегаФон',
+                    '922': 'МегаФон',
+                    '923': 'МегаФон',
+                    '924': 'МегаФон',
+                    '925': 'МегаФon',
+                    '926': 'МегаФон',
+                    '927': 'МегаФон',
+                    '928': 'МегаФон',
+                    '929': 'МегаФон',
+                    '930': 'МегаФон',
+                    '931': 'МегаФон',
+                    '932': 'МегаФон',
+                    '933': 'МегаФон',
+                    '934': 'МегаФон',
+                    '936': 'МегаФон',
+                    '937': 'МегаФон',
+                    '938': 'МегаФон',
+                    '939': 'МегаФон',
+                    '950': 'Билайн',
+                    '951': 'Билайн',
+                    '952': 'Билайн',
+                    '953': 'Билайн',
+                    '954': 'Билайн',
+                    '955': 'Билайн',
+                    '956': 'Билайн',
+                    '958': 'Билайн',
+                    '960': 'Билайн',
+                    '961': 'Билайн',
+                    '962': 'Билайн',
+                    '963': 'Билайн',
+                    '964': 'Билайн',
+                    '965': 'Билайн',
+                    '966': 'Билайн',
+                    '967': 'Билайн',
+                    '968': 'Билайн',
+                    '969': 'Билайн',
+                    '970': 'Билайн',
+                    '971': 'Билайн',
+                    '977': 'Билайн',
+                    '978': 'Билайн',
+                    '979': 'Билайн',
+                    '980': 'Теле2',
+                    '981': 'Теле2',
+                    '982': 'Теле2',
+                    '983': 'Теле2',
+                    '984': 'Теле2',
+                    '985': 'Теле2',
+                    '986': 'Теле2',
+                    '987': 'Теле2',
+                    '988': 'Теле2',
+                    '989': 'Теле2',
+                };
+                operator = operators[prefix] || 'Неизвестный оператор';
+            } else if (cleanPhone.startsWith('380') || cleanPhone.startsWith('+380')) {
+                country = 'Украина 🇺🇦';
+                operator = 'Украинский оператор';
+            } else if (cleanPhone.startsWith('375') || cleanPhone.startsWith('+375')) {
+                country = 'Беларусь 🇧🇾';
+                operator = 'Беларусский оператор';
+            } else if (cleanPhone.startsWith('7') && cleanPhone.length === 11) {
+                country = 'Казахстан 🇰🇿';
+                operator = 'Казахстанский оператор';
+            }
+            
+            addResult('phoneResults', `   Страна: ${country}`);
+            addResult('phoneResults', `   Оператор: ${operator}`);
+            
+            // Ссылки на мессенджеры
+            addResult('phoneResults', `💬 <strong>МЕССЕНДЖЕРЫ:</strong>`, 'success');
+            addResult('phoneResults', `   WhatsApp: <a href="https://wa.me/${cleanPhone}" target="_blank">https://wa.me/${cleanPhone}</a>`);
+            addResult('phoneResults', `   Telegram: <a href="https://t.me/${cleanPhone}" target="_blank">https://t.me/${cleanPhone}</a>`);
+            addResult('phoneResults', `   Viber: viber://chat?number=${cleanPhone}`);
+            
+            // Поиск в соцсетях
+            addResult('phoneResults', `🔍 <strong>ПОИСК В СОЦСЕТЯХ:</strong>`, 'warning');
+            addResult('phoneResults', `   ВКонтакте: <a href="https://vk.com/phone/${cleanPhone}" target="_blank">https://vk.com/phone/${cleanPhone}</a>`);
+            addResult('phoneResults', `   Одноклассники: <a href="https://ok.ru/search?q=${cleanPhone}" target="_blank">Поиск по номеру</a>`);
+            
+            // Поиск в Google
+            addResult('phoneResults', `🌐 <strong>ПОИСК В ИНТЕРНЕТЕ:</strong>`, 'warning');
+            const googleQuery = encodeURIComponent(`"${phone}" OR "${cleanPhone}"`);
+            addResult('phoneResults', `   Google: <a href="https://www.google.com/search?q=${googleQuery}" target="_blank">Поиск по номеру</a>`);
+            addResult('phoneResults', `   Яндекс: <a href="https://yandex.ru/search/?text=${googleQuery}" target="_blank">Поиск в Яндексе</a>`);
+            
+            // Проверка на спам
+            addResult('phoneResults', `⚠️ <strong>ПРОВЕРКА НА СПАМ:</strong>`, 'warning');
+            addResult('phoneResults', `   • Кто звонил?: <a href="https://xn--80abhddbmm6a4a.xn--p1ai/${cleanPhone}" target="_blank">ктозвонил.рф</a>`);
+            addResult('phoneResults', `   • Определитель спама: <a href="https://callfilter.app/${cleanPhone}" target="_blank">CallFilter</a>`);
+            addResult('phoneResults', `   • SpamCalls: <a href="https://spamcalls.net/ru/search?q=${cleanPhone}" target="_blank">SpamCalls.net</a>`);
+        }
+        
+        // ==================== МОДУЛЬ АНАЛИЗА EMAIL ====================
+        
+        async function analyzeEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) {
+                alert('Введите email адрес');
+                return;
+            }
+            
+            clearResults('emailResults');
+            
+            // Проверка формата
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                addResult('emailResults', '❌ Неверный формат email', 'error');
+                return;
+            }
+            
+            addResult('emailResults', `📧 <strong>АНАЛИЗ EMAIL:</strong> ${email}`, 'success');
+            
+            // Разбор email
+            const [localPart, domain] = email.split('@');
+            addResult('emailResults', `   Локальная часть: ${localPart}`);
+            addResult('emailResults', `   Домен: ${domain}`);
+            
+            // Проверка популярных доменов СНГ
+            const cnsDomains = ['mail.ru', 'yandex.ru', 'yandex.ua', 'yandex.kz', 'yandex.by', 
+                               'rambler.ru', 'bk.ru', 'list.ru', 'inbox.ru', 'gmail.com'];
+            if (cnsDomains.includes(domain)) {
+                addResult('emailResults', `   📌 Популярный домен СНГ: Да`);
+            }
+            
+            // Поиск в соцсетях
+            addResult('emailResults', `👤 <strong>ПОИСК В СОЦСЕТЯХ:</strong>`, 'success');
+            addResult('emailResults', `   ВКонтакте: <a href="https://vk.com/search?c[q]=${encodeURIComponent(email)}" target="_blank">Поиск в ВК</a>`);
+            addResult('emailResults', `   Одноклассники: <a href="https://ok.ru/search?st.query=${encodeURIComponent(email)}" target="_blank">Поиск в ОК</a>`);
+            addResult('emailResults', `   Telegram: <a href="https://t.me/${localPart}" target="_blank">t.me/${localPart}</a>`);
+            addResult('emailResults', `   GitHub: <a href="https://github.com/${localPart}" target="_blank">github.com/${localPart}</a>`);
+            addResult('emailResults', `   Instagram: <a href="https://instagram.com/${localPart}" target="_blank">instagram.com/${localPart}</a>`);
+            
+            // Проверка утечек
+            addResult('emailResults', `🔐 <strong>ПРОВЕРКА УТЕЧЕК:</strong>`, 'warning');
+            addResult('emailResults', `   Have I Been Pwned: <a href="https://haveibeenpwned.com/account/${encodeURIComponent(email)}" target="_blank">Проверить утечки</a>`);
+            addResult('emailResults', `   Firefox Monitor: <a href="https://monitor.firefox.com/scan/${encodeURIComponent(email)}" target="_blank">Firefox Monitor</a>`);
+            addResult('emailResults', `   Avast Hack Check: <a href="https://www.avast.com/hackcheck/${encodeURIComponent(email)}" target="_blank">Avast Hack Check</a>`);
+            
+            // Поиск в интернете
+            addResult('emailResults', `🌐 <strong>ПОИСК В ИНТЕРНЕТЕ:</strong>`, 'warning');
+            const searchQuery = encodeURIComponent(`"${email}" OR "${localPart}"`);
+            addResult('emailResults', `   Google: <a href="https://www.google.com/search?q=${searchQuery}" target="_blank">Поиск в Google</a>`);
+            addResult('emailResults', `   Яндекс: <a href="https://yandex.ru/search/?text=${searchQuery}" target="_blank">Поиск в Яндексе</a>`);
+            addResult('emailResults', `   DuckDuckGo: <a href="https://duckduckgo.com/?q=${searchQuery}" target="_blank">Поиск в DuckDuckGo</a>`);
+            
+            // Дополнительные инструменты
+            addResult('emailResults', `🔧 <strong>ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ:</strong>`, 'warning');
+            addResult('emailResults', `   • EmailRep: <a href="https://emailrep.io/${encodeURIComponent(email)}" target="_blank">EmailRep.io</a>`);
+            addResult('emailResults', `   • Hunter.io: <a href="https://hunter.io/verify/${encodeURIComponent(email)}" target="_blank">Hunter.io</a>`);
+            addResult('emailResults', `   • Intelligence X: <a href="https://intelx.io/?s=${encodeURIComponent(email)}" target="_blank">Intelligence X</a>`);
+            
+            try {
+                // Проверка DNS MX записей
+                const dnsResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`);
+                const dnsData = await dnsResponse.json();
+                
+                if (dnsData.Answer && dnsData.Answer.length > 0) {
+                    addResult('emailResults', `✅ MX записи найдены (домен существует)`);
+                } else {
+                    addResult('emailResults', `❌ MX записи не найдены`, 'error');
+                }
+            } catch (error) {
+                addResult('emailResults', `⚠️ Не удалось проверить MX записи`, 'warning');
+            }
+        }
+        
+        // ==================== МОДУЛЬ ПОИСКА ПО НИКУ ====================
+        
+        function searchUsername() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('Введите никнейм');
+                return;
+            }
+            
+            clearResults('usernameResults');
+            addResult('usernameResults', `👤 <strong>ПОИСК НИКНЕЙМА:</strong> ${username}`, 'success');
+            
+            // Социальные сети СНГ
+            addResult('usernameResults', `🌐 <strong>СОЦИАЛЬНЫЕ СЕТИ СНГ:</strong>`, 'success');
+            
+            const socialsCNS = [
+                ['ВКонтакте', `https://vk.com/${username}`, 'vk.com'],
+                ['Одноклассники', `https://ok.ru/${username}`, 'ok.ru'],
+                ['Telegram', `https://t.me/${username}`, 't.me'],
+                ['Яндекс.Дзен', `https://zen.yandex.ru/user/${username}`, 'zen.yandex.ru'],
+                ['Яндекс.Кью', `https://yandex.ru/q/user/${username}`, 'yandex.ru/q'],
+                ['Дзен', `https://dzen.ru/${username}`, 'dzen.ru'],
+                ['Pikabu', `https://pikabu.ru/@${username}`, 'pikabu.ru'],
+                ['Habr', `https://habr.com/ru/users/${username}`, 'habr.com'],
+                ['Rutube', `https://rutube.ru/channel/${username}`, 'rutube.ru'],
+                ['VK Видео', `https://vkvideo.ru/${username}`, 'vkvideo.ru']
+            ];
+            
+            socialsCNS.forEach(([name, url, domain]) => {
+                addResult('usernameResults', `   ${name}: <a href="${url}" target="_blank">${domain}/${username}</a>`);
+            });
+            
+            // Международные соцсети
+            addResult('usernameResults', `🌍 <strong>МЕЖДУНАРОДНЫЕ СЕТИ:</strong>`, 'success');
+            
+            const socialsInternational = [
+                ['GitHub', `https://github.com/${username}`, 'github.com'],
+                ['Instagram', `https://instagram.com/${username}`, 'instagram.com'],
+                ['Twitter/X', `https://twitter.com/${username}`, 'twitter.com'],
+                ['YouTube', `https://youtube.com/@${username}`, 'youtube.com/@'],
+                ['Twitch', `https://twitch.tv/${username}`, 'twitch.tv'],
+                ['Reddit', `https://reddit.com/user/${username}`, 'reddit.com/user'],
+                ['Steam', `https://steamcommunity.com/id/${username}`, 'steamcommunity.com/id'],
+                ['Spotify', `https://open.spotify.com/user/${username}`, 'open.spotify.com/user'],
+                ['TikTok', `https://tiktok.com/@${username}`, 'tiktok.com/@'],
+                ['LinkedIn', `https://linkedin.com/in/${username}`, 'linkedin.com/in']
+            ];
+            
+            socialsInternational.forEach(([name, url, domain]) => {
+                addResult('usernameResults', `   ${name}: <a href="${url}" target="_blank">${domain}/${username}</a>`);
+            });
+            
+            // Поисковые системы
+            addResult('usernameResults', `🔍 <strong>ПОИСКОВЫЕ СИСТЕМЫ:</strong>`, 'warning');
+            const encodedUsername = encodeURIComponent(`"${username}"`);
+            addResult('usernameResults', `   Google: <a href="https://www.google.com/search?q=${encodedUsername}" target="_blank">Поиск в Google</a>`);
+            addResult('usernameResults', `   Яндекс: <a href="https://yandex.ru/search/?text=${encodedUsername}" target="_blank">Поиск в Яндексе</a>`);
+            addResult('usernameResults', `   Bing: <a href="https://www.bing.com/search?q=${encodedUsername}" target="_blank">Поиск в Bing</a>`);
+            addResult('usernameResults', `   DuckDuckGo: <a href="https://duckduckgo.com/?q=${encodedUsername}" target="_blank">Поиск в DuckDuckGo</a>`);
+            
+            // Поиск по изображениям
+            addResult('usernameResults', `🖼️ <strong>ПОИСК ПО ИЗОБРАЖЕНИЯМ:</strong>`, 'warning');
+            addResult('usernameResults', `   Google Images: <a href="https://www.google.com/searchbyimage?image_url=${username}" target="_blank">Поиск по фото</a>`);
+            addResult('usernameResults', `   Яндекс.Картинки: <a href="https://yandex.ru/images/search?text=${encodedUsername}" target="_blank">Яндекс.Картинки</a>`);
+            addResult('usernameResults', `   TinEye: <a href="https://tineye.com/search?url=${username}" target="_blank">TinEye</a>`);
+            
+            // Специализированные поиски
+            addResult('usernameResults', `⚡ <strong>СПЕЦИАЛИЗИРОВАННЫЙ ПОИСК:</strong>`, 'warning');
+            addResult('usernameResults', `   • UserSearch: <a href="https://usersearch.org/index.php?username=${username}" target="_blank">UserSearch.org</a>`);
+            addResult('usernameResults', `   • Namechk: <a href="https://namechk.com/u/${username}" target="_blank">Namechk.com</a>`);
+            addResult('usernameResults', `   • KnowEm: <a href="https://knowem.com/checkusernames.php?u=${username}" target="_blank">KnowEm.com</a>`);
+            addResult('usernameResults', `   • What's My Name: <a href="https://whatsmyname.app/?q=${username}" target="_blank">WhatsMyName.app</a>`);
+        }
+        
+        // ==================== МОДУЛЬ АНАЛИЗА ДОМЕНА ====================
+        
+        async function analyzeDomain() {
+            const domain = document.getElementById('domainInput').value.trim();
+            if (!domain) {
+                alert('Введите домен');
+                return;
+            }
+            
+            clearResults('domainResults');
+            addResult('domainResults', `🔗 <strong>АНАЛИЗ ДОМЕНА:</strong> ${domain}`, 'success');
+            
+            try {
+                // WHOIS информация через hackertarget
+                const whoisResponse = await fetch(`https://api.hackertarget.com/whois/?q=${domain}`);
+                const whoisText = await whoisResponse.text();
+                
+                if (whoisText && !whoisText.includes('error') && !whoisText.includes('API')) {
+                    addResult('domainResults', `📋 <strong>WHOIS ИНФОРМАЦИЯ:</strong>`, 'success');
+                    
+                    const importantLines = whoisText.split('\n')
+                        .filter(line => line.includes('Registrar') || 
+                                      line.includes('Creation') || 
+                                      line.includes('Expir') || 
+                                      line.includes('Name Server') ||
+                                      line.includes('Updated'))
+                        .slice(0, 10);
+                    
+                    importantLines.forEach(line => {
+                        addResult('domainResults', `   ${line.trim()}`);
+                    });
+                }
+                
+                // DNS записи
+                const dnsResponse = await fetch(`https://api.hackertarget.com/dnslookup/?q=${domain}`);
+                const dnsText = await dnsResponse.text();
+                
+                if (dnsText && !dnsText.includes('error')) {
+                    addResult('domainResults', `🌐 <strong>DNS ЗАПИСИ:</strong>`, 'success');
+                    
+                    const dnsLines = dnsText.split('\n')
+                        .filter(line => line.includes('A ') || 
+                                      line.includes('MX ') || 
+                                      line.includes('TXT ') ||
+                                      line.includes('CNAME '))
+                        .slice(0, 8);
+                    
+                    dnsLines.forEach(line => {
+                        addResult('domainResults', `   ${line.trim()}`);
+                    });
+                }
+                
+                // Поиск поддоменов
+                const subsResponse = await fetch(`https://api.hackertarget.com/hostsearch/?q=${domain}`);
+                const subsText = await subsResponse.text();
+                
+                if (subsText && !subsText.includes('error')) {
+                    const subdomains = subsText.split('\n')
+                        .map(line => line.split(',')[0])
+                        .filter(sub => sub && sub !== domain)
+                        .slice(0, 5);
+                    
+                    if (subdomains.length > 0) {
+                        addResult('domainResults', `🔍 <strong>НАЙДЕННЫЕ ПОДДОМЕНЫ:</strong>`, 'success');
+                        subdomains.forEach(sub => {
+                            addResult('domainResults', `   • ${sub}`);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                addResult('domainResults', `⚠️ Ошибка при получении данных: ${error.message}`, 'warning');
+            }
+            
+            // Дополнительные ссылки
+            addResult('domainResults', `🔧 <strong>ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ:</strong>`, 'warning');
+            addResult('domainResults', `   WHOIS Lookup: <a href="https://whois.domaintools.com/${domain}" target="_blank">DomainTools WHOIS</a>`);
+            addResult('domainResults', `   Security Headers: <a href="https://securityheaders.com/?q=${domain}&followRedirects=on" target="_blank">Проверка заголовков</a>`);
+            addResult('domainResults', `   SSL Check: <a href="https://www.ssllabs.com/ssltest/analyze.html?d=${domain}" target="_blank">SSL Labs Test</a>`);
+            addResult('domainResults', `   BuiltWith: <a href="https://builtwith.com/${domain}" target="_blank">Технологии сайта</a>`);
+            addResult('domainResults', `   Wappalyzer: <a href="https://www.wappalyzer.com/lookup/${domain}" target="_blank">Wappalyzer</a>`);
+            
+            // Поиск в интернете
+            addResult('domainResults', `🌐 <strong>ПОИСК В ИНТЕРНЕТЕ:</strong>`, 'warning');
+            addResult('domainResults', `   Google: <a href="https://www.google.com/search?q=site:${domain}" target="_blank">Поиск на сайте</a>`);
+            addResult('domainResults', `   Яндекс: <a href="https://yandex.ru/search/?text=site:${domain}" target="_blank">Яндекс поиск</a>`);
+            addResult('domainResults', `   Wayback Machine: <a href="https://web.archive.org/web/*/${domain}" target="_blank">Архив сайта</a>`);
+        }
+        
+        // ==================== МОДУЛЬ ПОИСКА В СОЦСЕТЯХ ====================
+        
+        function searchSocial() {
+            const query = document.getElementById('socialInput').value.trim();
+            if (!query) {
+                alert('Введите имя для поиска');
+                return;
+            }
+            
+            clearResults('socialResults');
+            addResult('socialResults', `📊 <strong>ПОИСК В СОЦСЕТЯХ СНГ:</strong> ${query}`, 'success');
+            
+            const encodedQuery = encodeURIComponent(query);
+            
+            // ВКонтакте
+            addResult('socialResults', `👥 <strong>ВКОНТАКТЕ:</strong>`, 'success');
+            addResult('socialResults', `   • Поиск людей: <a href="https://vk.com/people/${encodedQuery}" target="_blank">vk.com/people/${encodedQuery}</a>`);
+            addResult('socialResults', `   • Глобальный поиск: <a href="https://vk.com/search?c[q]=${encodedQuery}" target="_blank">Поиск в ВК</a>`);
+            addResult('socialResults', `   • Группы: <a href="https://vk.com/groups?act=catalog&c[q]=${encodedQuery}" target="_blank">Поиск групп</a>`);
+            
+            // Одноклассники
+            addResult('socialResults', `👥 <strong>ОДНОКЛАССНИКИ:</strong>`, 'success');
+            addResult('socialResults', `   • Поиск людей: <a href="https://ok.ru/search?st.query=${encodedQuery}" target="_blank">Поиск в ОК</a>`);
+            addResult('socialResults', `   • Группы: <a href="https://ok.ru/search/groups?st.query=${encodedQuery}" target="_blank">Поиск групп</a>`);
+            
+            // Telegram
+            addResult('socialResults', `💬 <strong>TELEGRAM:</strong>`, 'success');
+            addResult('socialResults', `   • Поиск: <a href="https://t.me/${encodedQuery}" target="_blank">t.me/${encodedQuery}</a>`);
+            addResult('socialResults', `   • Поиск каналов: <a href="https://t.me/s/${encodedQuery}" target="_blank">Поиск каналов</a>`);
+            
+            // Яндекс сервисы
+            addResult('socialResults', `🌐 <strong>ЯНДЕКС СЕРВИСЫ:</strong>`, 'success');
+            addResult('socialResults', `   • Яндекс.Дзен: <a href="https://zen.yandex.ru/search?query=${encodedQuery}" target="_blank">Поиск в Дзен</a>`);
+            addResult('socialResults', `   • Яндекс.Кью: <a href="https://yandex.ru/q/search?text=${encodedQuery}" target="_blank">Поиск в Кью</a>`);
+            addResult('socialResults', `   • Яндекс.Картинки: <a href="https://yandex.ru/images/search?text=${encodedQuery}" target="_blank">Поиск фото</a>`);
+            
+            // Другие СНГ платформы
+            addResult('socialResults', `📱 <strong>ДРУГИЕ ПЛАТФОРМЫ СНГ:</strong>`, 'success');
+            addResult('socialResults', `   • Pikabu: <a href="https://pikabu.ru/search?q=${encodedQuery}" target="_blank">Pikabu поиск</a>`);
+            addResult('socialResults', `   • Habr: <a href="https://habr.com/ru/search/?q=${encodedQuery}" target="_blank">Habr поиск</a>`);
+            addResult('socialResults', `   • Rutube: <a href="https://rutube.ru/search/?query=${encodedQuery}" target="_blank">Rutube поиск</a>`);
+            addResult('socialResults', `   • Яндекс.Видео: <a href="https://yandex.ru/video/search?text=${encodedQuery}" target="_blank">Поиск видео</a>`);
+            
+            // Поисковые системы
+            addResult('socialResults', `🔍 <strong>ПОИСКОВЫЕ СИСТЕМЫ:</strong>`, 'warning');
+            addResult('socialResults', `   Google: <a href="https://www.google.com/search?q=${encodedQuery}" target="_blank">Google поиск</a>`);
+            addResult('socialResults', `   Яндекс: <a href="https://yandex.ru/search/?text=${encodedQuery}" target="_blank">Яндекс поиск</a>`);
+            addResult('socialResults', `   Поиск фото: <a href="https://www.google.com/search?tbm=isch&q=${encodedQuery}" target="_blank">Google Images</a>`);
+            
+            // Специализированные OSINT инструменты
+            addResult('socialResults', `🕵️‍♂️ <strong>OSINT ИНСТРУМЕНТЫ:</strong>`, 'warning');
+            addResult('socialResults', `   • Social Searcher: <a href="https://www.social-searcher.com/search-users/?q=${encodedQuery}" target="_blank">Social Searcher</a>`);
+            addResult('socialResults', `   • Pipl: <a href="https://pipl.com/search/?q=${encodedQuery}" target="_blank">Pipl.com</a>`);
+            addResult('socialResults', `   • Spokeo: <a href="https://www.spokeo.com/${encodedQuery}" target="_blank">Spokeo.com</a>`);
+            addResult('socialResults', `   • That's Them: <a href="https://thatsthem.com/name/${encodedQuery}" target="_blank">That's Them</a>`);
+        }
+        
+        // Автоматически показать меню при загрузке
+        window.onload = function() {
+            showMainMenu();
+        };
+        
+        // Горячие клавиши
+        document.addEventListener('keydown', function(e) {
+            // ESC - вернуться в меню
+            if (e.key === 'Escape') {
+                showMainMenu();
+            }
+            // Ctrl+1..6 - быстрый доступ к разделам
+            if (e.ctrlKey) {
+                const sections = ['ip', 'phone', 'email', 'username', 'domain', 'social'];
+                const index = parseInt(e.key) - 1;
+                if (index >= 0 && index < sections.length) {
+                    showSection(sections[index]);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
